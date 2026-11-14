@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#F4F2EE">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>window.TM_PWA=true</script><script>window.TM_BUILD="15 Kasım 2026 01:47"</script>
+<script>window.TM_PWA=true</script><script>window.TM_BUILD="15 Kasım 2026 02:11"</script>
 
 <title>Tokyo Haritası</title>
 <style>/* required styles */
@@ -1692,6 +1692,13 @@ function defineSmoothGL() {
       if (!this._map || this._zooming || !this._offset) return;
       const cur = this._map.containerPointToLayerPoint([0, 0]), sz = this._map.getSize(), p = this.options.padding * 0.8;
       if (Math.abs(cur.x - this._offset.x) > sz.x * p || Math.abs(cur.y - this._offset.y) > sz.y * p) this._throttledUpdate();
+    },
+    // The plugin moves the GL container at once but MapLibre only paints on the next animation frame, so for one frame the
+    // old picture sat at the new place: the map jumped back and forth at the end of every swipe. Paint in the same frame instead.
+    _update(e) {
+      L.MaplibreGL.prototype._update.call(this, e);
+      const gl = this._glMap;
+      if (this._map && !this._zooming && gl && gl.style && gl.style._loaded) { try { gl.redraw(); } catch (err) { /* the next frame paints it */ } }
     }
   });
 }
