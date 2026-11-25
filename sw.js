@@ -1,6 +1,6 @@
 /* Tokyo Haritası service worker: the app works offline after the first visit.
    App shell: stale-while-revalidate (new versions arrive on the next launch). Map tiles + fonts: cache-first. */
-const APP = 'tokyo-app-e1b32375f6', TILES = 'tokyo-tiles-v2';   // v2: wider map (Haneda, Lake Town)
+const APP = 'tokyo-app-b3f3323b06', TILES = 'tokyo-tiles-v2';   // v2: wider map (Haneda, Lake Town)
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(APP).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
