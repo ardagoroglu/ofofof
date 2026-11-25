@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#F4F2EE">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>window.TM_PWA=true</script><script>window.TM_BUILD="25 Kasım 2026 19:16"</script>
+<script>window.TM_PWA=true</script><script>window.TM_BUILD="25 Kasım 2026 19:34"</script>
 
 <title>Tokyo Haritası</title>
 <style>/* required styles */
@@ -1272,9 +1272,9 @@ html.framed #phone{width:calc(var(--pw) + 28px);height:calc(var(--ph) + 28px);bo
 html.framed #screen{width:var(--pw);height:var(--ph);border-radius:var(--pr);background:var(--kagit)}
 /* üst kenar: iPhone'da harita durum çubuğunun altına kadar uzanır (saydam çubuk, beyaz saat ve pil); okunaklı kalsın diye yalnız çubuk yüksekliğinde kısa bir gölge.
    Galaxy S22'de Chrome bugün ana ekran uygulamasını durum çubuğunun altına çizmiyor: orada çubuk harita zemini renginde düz kalır. */
-#sbScrim{height:var(--safe-top);z-index:1600;background:linear-gradient(rgba(22,34,58,.56),rgba(22,34,58,.34) 52%,rgba(22,34,58,0))}
+#sbScrim{display:none}      /* iOS saat ve pili koyu çiziyor ve kendi bulanık şeridini ekliyor: bizim gölge kalktı */
 html.framed #app{top:0;width:var(--pw);height:calc(var(--ph) - var(--pnav));--safe-top:var(--pst);--safe-bottom:var(--psb)}
-html.framed #sbar{height:var(--pst);background:transparent;color:#fff;z-index:3000}
+html.framed #sbar{height:var(--pst);background:transparent;color:var(--murekkep);z-index:3000}
 html.framed #island{z-index:3001}
 html.framed.dev-s22 #app{top:var(--pst);height:calc(var(--ph) - var(--pst) - var(--pnav));--safe-top:0px}
 html.framed.dev-s22 #sbar{background:#F4F2EE;color:var(--murekkep)}
@@ -2021,6 +2021,19 @@ function fixSafeTop() {
   else appEl.style.removeProperty('--safe-top');
 }
 fixSafeTop(); window.addEventListener('resize', fixSafeTop); setTimeout(fixSafeTop, 600);
+/* iPhone ana ekran uygulaması: içerik durum çubuğunun altına uzanırken iOS yerleşim alanını üst boşluk kadar kısa bildiriyor; alt çubuk yukarı kayıyor, altta şerit kalıyor
+   (WebKit 237961, 254868). Üst boşluk > 0 ise görünüm ekranın tamamıdır: sayfa ve uygulama kutusu ekran yüksekliğine sabitlenir. */
+var IOSBOX = '';
+function fixIosBox() {
+  const de = document.documentElement;
+  if (!/iPhone|iPod/.test(navigator.userAgent) || !de.classList.contains('standalone') || de.classList.contains('framed')) return;
+  const H = Math.max(screen.width, screen.height), on = innerHeight > innerWidth && envInset('top') > 0, v = on ? H + 'px' : '';
+  if (v !== IOSBOX) { IOSBOX = v; [de, document.body].forEach(el => { el.style.minHeight = v; }); appEl.style.bottom = on ? 'auto' : ''; appEl.style.height = v;
+    try { map.invalidateSize(); } catch (e) { /* harita henüz kurulmadı */ } }
+  if (window.scrollY) window.scrollTo(0, 0);
+}
+fixIosBox(); window.addEventListener('resize', fixIosBox); window.addEventListener('orientationchange', () => setTimeout(fixIosBox, 300)); setTimeout(fixIosBox, 600); setTimeout(fixIosBox, 2000);
+window.addEventListener('scroll', () => { if (window.scrollY && IOSBOX) window.scrollTo(0, 0); });
 window.addEventListener('resize', fitFrame);
 $('#viewFull').addEventListener('click', () => setView('full'));
 const clockFmt = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' });
